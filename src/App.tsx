@@ -18,6 +18,7 @@ export default function Game() {
   const [showHelp, setShowHelp] = useState(false);
   const BEST_KEY = "dodge-blobs:best";
   const SCORE_KEY = "dodge-blobs:score";
+  const scoreRef = useRef(0);
 
   // 自機
   const player = useRef({ x: 200, y: 200, r: 10 });
@@ -151,15 +152,21 @@ export default function Game() {
     setMessage("剣で撃破も可！最強は3発。Spaceで再スタート");
     setShowGameOver(false);
     setRunning(true);
+    scoreRef.current = 0;
   };
 
-  // ベストスコア復元（初回のみ）
+  // ベスト/スコア復元（初回のみ）
   useEffect(() => {
     try {
       const saved = localStorage.getItem(BEST_KEY);
       if (saved != null) {
         const n = Number(saved);
         if (!Number.isNaN(n)) setBest(n);
+      }
+      const savedScore = localStorage.getItem(SCORE_KEY);
+      if (savedScore != null) {
+        const ns = Number(savedScore);
+        if (!Number.isNaN(ns)) { setScore(ns); scoreRef.current = ns; }
       }
     } catch {}
   }, []);
@@ -281,7 +288,11 @@ export default function Game() {
               b.hp = b.type === "small" ? 1 : b.type === "big" ? 2 : 3;
             }
             b.hp -= 1;
-            setScore((s) => s + 1);
+            setScore((s) => {
+              const next = s + 1;
+              scoreRef.current = next;
+              return next;
+            });
             // 最強の本体を倒したら、同じidのultimate本体を一掃
             if (b.hp <= 0) {
               if (b.type === "ultimate") {
@@ -361,11 +372,8 @@ export default function Game() {
         ctx.restore();
       }
 
-      // UI
+      // UI（メッセージのみ表示。スコア/ベストはDOMで表示）
       ctx.fillStyle = "#cfd8ff";
-      ctx.font = `${16 * dpr}px ui-sans-serif, system-ui, -apple-system`;
-      ctx.fillText(`SCORE: ${score.toString().padStart(5, '0')}`, 12 * dpr, 24 * dpr);
-      ctx.fillText(`BEST:  ${best.toString().padStart(5, '0')}`, 12 * dpr, 44 * dpr);
       if (message) {
         ctx.font = `${14 * dpr}px ui-sans-serif, system-ui, -apple-system`;
         ctx.fillText(message, 12 * dpr, h - 20 * dpr);
@@ -374,7 +382,8 @@ export default function Game() {
       if (hit) {
         setRunning(false);
         setMessage("GAME OVER : Spaceで再スタート");
-        setBest((b) => Math.max(b, score));
+        const currentScore = scoreRef.current;
+        setBest((b) => Math.max(b, currentScore));
         setShowGameOver(true);
         return;
       }
