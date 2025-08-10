@@ -14,7 +14,10 @@ export default function Game() {
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
   const [message, setMessage] = useState("左クリック/タッチで剣！ small=1発・big=2発・最強=3発");
+  const [showGameOver, setShowGameOver] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
   const BEST_KEY = "dodge-blobs:best";
+  const SCORE_KEY = "dodge-blobs:score";
 
   // 自機
   const player = useRef({ x: 200, y: 200, r: 10 });
@@ -146,6 +149,7 @@ export default function Game() {
     blobs.current = [];
     setScore(0);
     setMessage("剣で撃破も可！最強は3発。Spaceで再スタート");
+    setShowGameOver(false);
     setRunning(true);
   };
 
@@ -221,8 +225,7 @@ export default function Game() {
       ctx.fillStyle = "#0b1020";
       ctx.fillRect(0, 0, w, h);
 
-      // スコア
-      setScore((s) => s + 1);
+      // スコア: フレーム加点は廃止（剣ヒット時のみ加点）
       t++;
       spawnController(t, w, h);
 
@@ -278,6 +281,7 @@ export default function Game() {
               b.hp = b.type === "small" ? 1 : b.type === "big" ? 2 : 3;
             }
             b.hp -= 1;
+            setScore((s) => s + 1);
             // 最強の本体を倒したら、同じidのultimate本体を一掃
             if (b.hp <= 0) {
               if (b.type === "ultimate") {
@@ -371,6 +375,7 @@ export default function Game() {
         setRunning(false);
         setMessage("GAME OVER : Spaceで再スタート");
         setBest((b) => Math.max(b, score));
+        setShowGameOver(true);
         return;
       }
 
@@ -397,6 +402,13 @@ export default function Game() {
     } catch {}
   }, [best]);
 
+  // スコア保存
+  useEffect(() => {
+    try {
+      localStorage.setItem(SCORE_KEY, String(score));
+    } catch {}
+  }, [score]);
+
   return (
     <div className="game-root">
       <h1 className="game-title">DodgeBlobs（避けて斬る）</h1>
@@ -407,12 +419,46 @@ export default function Game() {
       </div>
       <div className="game-controls">
         <button className="btn btn-primary" onClick={() => reset()}>リスタート</button>
-        <button className="btn btn-ghost" onClick={() => setMessage("操作: マウス/タッチで移動、左クリック/タップで斬る")}>操作ヘルプ</button>
+        <button className="btn btn-ghost" onClick={() => setShowHelp(true)}>操作ヘルプ</button>
       </div>
       <div className="game-stage">
         <canvas ref={canvasRef} className="game-canvas"/>
       </div>
       <div className="game-hint">操作：マウス/タッチ移動・左クリック/タップで剣・Spaceで再スタート</div>
+
+      {showGameOver && (
+        <div className="overlay" role="dialog" aria-modal="true">
+          <div className="modal">
+            <h2 className="modal-title">Game Over</h2>
+            <div className="score-bar" style={{ marginBottom: 12 }}>
+              <span className="chip">Score: {score}</span>
+              <span className="chip chip--accent">Best: {best}</span>
+            </div>
+            <div className="modal-actions">
+              <button className="btn btn-primary" onClick={() => reset()}>もう一度</button>
+              <button className="btn btn-ghost" onClick={() => setShowHelp(true)}>操作ヘルプ</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showHelp && (
+        <div className="overlay" role="dialog" aria-modal="true" onClick={() => setShowHelp(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2 className="modal-title">操作ヘルプ</h2>
+            <div className="help-list">
+              <div>・マウス/タッチ移動で自機が追従</div>
+              <div>・左クリック/タップで剣を振る（クールダウンあり）</div>
+              <div>・small=1発・big=2発・最強本体=3発で撃破</div>
+              <div>・当たるとゲームオーバー／Spaceで再スタート</div>
+              <div>・スコアは「剣が当たった回数」で加算</div>
+            </div>
+            <div className="modal-actions">
+              <button className="btn btn-primary" onClick={() => setShowHelp(false)}>閉じる</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

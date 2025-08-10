@@ -125,3 +125,46 @@
   .game-controls { gap: 8px; }
   .btn { padding: 10px 12px; font-size: 13px; }
 }
+
+/* ===== Overlay & Modal ===== */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 10, 24, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 50;
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  width: min(92vw, 520px);
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 18px 16px;
+}
+
+.modal-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.help-list {
+  display: grid;
+  gap: 6px;
+  color: var(--text);
+  font-size: 14px;
+  opacity: 0.9;
+}
