@@ -14,6 +14,7 @@ export default function Game() {
   const [score, setScore] = useState(0);
   const [best, setBest] = useState(0);
   const [message, setMessage] = useState("左クリック/タッチで剣！ small=1発・big=2発・最強=3発");
+  const BEST_KEY = "dodge-blobs:best";
 
   // 自機
   const player = useRef({ x: 200, y: 200, r: 10 });
@@ -147,6 +148,17 @@ export default function Game() {
     setMessage("剣で撃破も可！最強は3発。Spaceで再スタート");
     setRunning(true);
   };
+
+  // ベストスコア復元（初回のみ）
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(BEST_KEY);
+      if (saved != null) {
+        const n = Number(saved);
+        if (!Number.isNaN(n)) setBest(n);
+      }
+    } catch {}
+  }, []);
 
   useEffect(() => {
     const c = canvasRef.current!;
@@ -378,10 +390,21 @@ export default function Game() {
     };
   }, [running]);
 
+  // ベストスコア保存
+  useEffect(() => {
+    try {
+      localStorage.setItem(BEST_KEY, String(best));
+    } catch {}
+  }, [best]);
+
   return (
     <div className="game-root">
       <h1 className="game-title">DodgeBlobs（避けて斬る）</h1>
       <p className="game-subtitle">白丸＝自機。赤い丸は斬ってもOK！ small=1発／big=2発／最強本体=3発</p>
+      <div className="score-bar" aria-live="polite">
+        <span className="chip">Score: {score}</span>
+        <span className="chip chip--accent">Best: {best}</span>
+      </div>
       <div className="game-controls">
         <button className="btn btn-primary" onClick={() => reset()}>リスタート</button>
         <button className="btn btn-ghost" onClick={() => setMessage("操作: マウス/タッチで移動、左クリック/タップで斬る")}>操作ヘルプ</button>
