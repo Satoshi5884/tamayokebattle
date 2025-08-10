@@ -1,0 +1,16 @@
+/* ベースリセット + タッチ操作最適化 */
+:root { -webkit-tap-highlight-color: transparent; }
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  background: #0b1020;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans JP", Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* スクロール防止（モバイルでのアドレスバー縮み対策） */
+@supports (height: 100svh) {
+  #root { min-height: 100svh; }
+}
